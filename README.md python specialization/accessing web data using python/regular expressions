@@ -1,0 +1,11 @@
+In this assignment you will read through and parse a file with text and numbers. You will extract all the numbers in the file and compute the sum of the numbers.
+import re
+handle = open('/content/regular expression.txt')
+numlist = []
+for line in handle:
+    line =line.rstrip()
+    # Find all numbers in the line, including those with decimal points
+    num = re.findall(r'[0-9]+\.?[0-9]*', line)
+    for n in num:
+        numlist.append(float(n))
+print("Sum:", sum(numlist))

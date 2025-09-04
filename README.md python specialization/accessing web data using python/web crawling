@@ -1,0 +1,65 @@
+Scraping Numbers from HTML using BeautifulSoup In this assignment you will write a Python program similar to http://www.py4e.com/code3/urllink2.py. The program will use urllib to read the HTML from the data files below, and parse the data, extracting numbers and compute the sum of the numbers in the file.
+
+We provide two files for this assignment. One is a sample file where we give you the sum for your testing and the other is the actual data you need to process for the assignment.
+
+Sample data: http://py4e-data.dr-chuck.net/comments_42.html (Sum=2553)
+Actual data: http://py4e-data.dr-chuck.net/comments_2263410.html (Sum ends with 40)
+
+import urllib.request
+from bs4 import BeautifulSoup
+
+def scrape_numbers_from_url(url):
+    """
+    Scrapes numbers from span tags in HTML and returns their sum
+    """
+    try:
+        print(f"Opening URL: {url}")
+        html = urllib.request.urlopen(url).read()
+
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        span_tags = soup('span')
+        
+        total_sum = 0
+        numbers_found = []
+        
+        for tag in span_tags:
+
+            if tag.get('class') and 'comments' in tag.get('class'):
+
+                try:
+                    number = int(tag.string)
+                    numbers_found.append(number)
+                    total_sum += number
+                    print(f"Found number: {number}")
+                except (ValueError, TypeError):
+                    # Skip if conversion fails
+                    print(f"Could not convert to number: {tag.string}")
+                    continue
+        
+        print(f"\nNumbers found: {numbers_found}")
+        print(f"Count of numbers: {len(numbers_found)}")
+        print(f"Sum: {total_sum}")
+        
+        return total_sum
+        
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return None
+
+sample_url = "http://py4e-data.dr-chuck.net/comments_42.html"
+print("Testing with sample data:")
+print("=" * 50)
+sample_sum = scrape_numbers_from_url(sample_url)
+print(f"\nExpected sum: 2553")
+print(f"Calculated sum: {sample_sum}")
+print(f"Match: {sample_sum == 2553}")
+
+print("\n" + "=" * 50)
+
+actual_url = "http://py4e-data.dr-chuck.net/comments_2263410.html"
+print("Processing actual assignment data:")
+print("=" * 50)
+actual_sum = scrape_numbers_from_url(actual_url)
+print(f"\nFinal sum: {actual_sum}")
+print(f"Sum ends with: {str(actual_sum)[-2:] if actual_sum else 'N/A'}")

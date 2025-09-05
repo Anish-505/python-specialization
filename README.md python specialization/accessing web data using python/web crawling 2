@@ -1,0 +1,148 @@
+In this assignment you will write a Python program that expands on http://www.py4e.com/code3/urllinks.py. 
+The program will use urllib to read the HTML from the data files below, extract the href= vaues from the anchor tags, 
+scan for a tag that is in a particular position relative to the first name in the list, 
+follow that link and repeat the process a number of times and report the last name you find.
+Start at: http://py4e-data.dr-chuck.net/known_by_Samy.html
+Find the link at position 18 (the first name is 1). Follow that link. Repeat this process 7 times. The answer is the last name that you retrieve.
+Hint: The first character of the name of the last page that you will load is: M
+Strategy
+The web pages tweak the height between the links and hide the page after a few seconds to make it difficult for you to do the assignment without writing a Python program.
+But frankly with a little effort and patience you can overcome these attempts to make it a little harder to complete the assignment without writing a Python program. 
+But that is not the point. The point is to write a clever Python program to solve the program.
+
+import urllib.request
+from bs4 import BeautifulSoup
+
+def follow_links(start_url, count, position):
+    """
+    Follow links through web pages based on position and count
+    
+    Args:
+        start_url: Starting URL
+        count: Number of times to follow links
+        position: Position of link to follow (1-indexed)
+    
+    Returns:
+        Last name found in the sequence
+    """
+    current_url = start_url
+    names_sequence = []
+    
+    # Follow links for the specified count + 1 (to include the starting page)
+    for i in range(count + 1):
+        try:
+            print(f"Retrieving: {current_url}")
+            
+            # Read HTML from current URL
+            html = urllib.request.urlopen(current_url).read()
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            # Find all anchor tags
+            anchor_tags = soup('a')
+            
+            # Extract the name from current page URL
+            if 'known_by_' in current_url:
+                current_name = current_url.split('known_by_')[1].split('.html')[0]
+                names_sequence.append(current_name)
+            
+            # If this is not the last iteration, find the next link to follow
+            if i < count:
+                if len(anchor_tags) >= position:
+                    # Get the link at the specified position (1-indexed)
+                    next_link = anchor_tags[position - 1]
+                    href = next_link.get('href', None)
+                    
+                    if href:
+                        # Handle relative URLs
+                        if href.startswith('http'):
+                            current_url = href
+                        else:
+                            # Construct absolute URL for relative links
+                            base_url = current_url.rsplit('/', 1)[0]
+                            current_url = f"{base_url}/{href}"
+                    else:
+                        print(f"No href found in anchor tag at position {position}")
+                        break
+                else:
+                    print(f"Not enough anchor tags found. Only {len(anchor_tags)} tags, need position {position}")
+                    break
+            
+        except Exception as e:
+            print(f"Error processing {current_url}: {e}")
+            break
+    
+    return names_sequence
+
+def interactive_mode():
+    """Interactive mode to get user input"""
+    url = input("Enter URL: ").strip()
+    count = int(input("Enter count: ").strip())
+    position = int(input("Enter position: ").strip())
+    
+    print()  # Empty line for formatting
+    names = follow_links(url, count, position)
+    
+    if names:
+        print(f"\nSequence of names: {' '.join(names)}")
+        print(f"Last name in sequence: {names[-1]}")
+    else:
+        print("No names found in the sequence")
+
+def test_sample():
+    """Test with the sample problem"""
+    print("Testing with sample problem:")
+    print("=" * 50)
+    
+    sample_url = "http://py4e-data.dr-chuck.net/known_by_Fikret.html"
+    sample_count = 4
+    sample_position = 3
+    
+    print(f"URL: {sample_url}")
+    print(f"Count: {sample_count}")
+    print(f"Position: {sample_position}")
+    print()
+    
+    names = follow_links(sample_url, sample_count, sample_position)
+    
+    if names:
+        print(f"\nSequence of names: {' '.join(names)}")
+        print(f"Last name in sequence: {names[-1]}")
+        print(f"Expected last name: Anayah")
+        print(f"Match: {names[-1] == 'Anayah'}")
+    
+    return names
+
+def solve_actual():
+    """Solve the actual problem"""
+    print("\nSolving actual problem:")
+    print("=" * 50)
+    
+    actual_url = "http://py4e-data.dr-chuck.net/known_by_Samy.html"
+    actual_count = 7
+    actual_position = 18
+    
+    print(f"URL: {actual_url}")
+    print(f"Count: {actual_count}")
+    print(f"Position: {actual_position}")
+    print()
+    
+    names = follow_links(actual_url, actual_count, actual_position)
+    
+    if names:
+        print(f"\nSequence of names: {' '.join(names)}")
+        print(f"Last name in sequence: {names[-1]}")
+        print(f"First character of last name: {names[-1][0] if names[-1] else 'N/A'}")
+        print(f"Expected first character: M")
+        print(f"Match: {names[-1][0] == 'M' if names[-1] else False}")
+    
+    return names
+
+if __name__ == "__main__":
+    # Test with sample data first
+    test_sample()
+    
+    # Solve actual problem
+    solve_actual()
+    
+    # Uncomment the line below if you want interactive mode
+    # interactive_mode()
